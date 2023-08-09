@@ -7,41 +7,59 @@ pipeline {
     }
 
     stages {
-
-        stage('Preparation') {
+        stage('Prepare') {
             steps {
                 // Get some code from a GitHub repository
                 git branch: 'main',
-                    url: 'https://gitlab.com/Krishna_07/pipelines-java.git'
-            }
-        }
-         
-        stage('Build') {
-            
-            steps {
-
-                // Run Maven on a Unix agent.
-                sh "mvn -Dmaven.test.failure.ignore=true clean package"
-
-                // To run Maven on a Windows agent, use
-                // bat "mvn -Dmaven.test.failure.ignore=true clean package"
-            }
-
-        }
-
-        stage('Test') {
-            steps {
-                echo "Testing stage"
+                    url: 'https://github.com/mycloud-practice/pipelines-java.git'
             }
 
             post {
-                // If Maven was able to run the tests, even if some of the test
-                // failed, record the test results and archive the jar file.
                 success {
-                    junit '**/target/surefire-reports/TEST-*.xml'
-                    archiveArtifacts 'target/*.war'
+                    echo "Preparation is successfull ! :)"
                 }
             }
         }
+
+        stage('Build'){
+            steps{
+                sh mvn compile
+            }
+
+            post{
+                success{
+                echo "Build is succesfull ! :)"
+                }
+            }
+        }
+
+        stage('Test'){
+            steps{                
+                    sh "mvn -Dmaven.test.failure.ignore=true clean package"
+                    junit '**/target/surefire-reports/TEST-*.xml'
+                    archiveArtifacts 'target/*.war'
+            }
+            post{
+                success{
+                echo "Test done" 
+                }
+            }
+        }
+
+        stage("Email"){
+            steps{
+                echo 'Sending email notification ...'
+                mail to: 'okz2kor@bosch.com',
+                subject: "Pipeline build is successfull",
+                body: "Test email notification for pipeline"
+
+            }
+            post{
+                success{
+                    echo "Email sent!"
+                }
+            }
+        }
+
     }
 }
